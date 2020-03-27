@@ -4,7 +4,11 @@ Import-Module ActiveDirectory
 # Import XML Configuration Settings from config.xml
 [xml]$configFile    = Get-Content "config.xml"
 $count              = 0
-$workshopUserInfo   = @{}
+$workshopUserInfo   = New-Object PSObject
+$workshopCollected  = @()
+
+# Cleanup pre-existing exported CSV
+Remove-Item -Path $configFile.Settings.ExportCSVPath -ErrorAction SilentlyContinue | Out-Null
 
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
@@ -23,8 +27,12 @@ do {
     Remove-Variable adSecurePassword
     $pasSafeName        = "RESTAPIWorkshop${count}"
     $pasAppID           = "RESTAPIWorkshop${count}"
-    # Save metadata into hash table for reporting later
-    $workshopUserInfo.Append($adUsername, $adPassword, $pasSafeName, $pasAppID)
+    # Save details into PSObject for export to CSV later
+    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "username" -Value $adUsername
+    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "password" -Value $adPassword
+    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "safe" -Value $pasSafeName
+    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "appid" -Value $pasAppID
+    $workshopCollected += $workshopUserInfo
     
     # Create user object in Active Directory
     $newADUser = @{
@@ -105,7 +113,7 @@ do {
     foreach ($account in $mockAccounts) {
         $addAccount = @{
             address                     = $configFile.Settings.ActiveDirectory.Domain
-            username                    = $account
+            username                    = $account.username
             platformID                  = $configFile.Settings.CyberArk.PlatformID
             SafeName                    = $pasSafeName
             automaticManagementEnabled  = $False
@@ -124,5 +132,7 @@ Close-PASSession
 Write-Host ""
 Write-Host "==> Deployment complete" -ForegroundColor Green
 
-Export-Csv -Path $configFile.Settings.ExportCSVPath -InputObject $workshopUserInfo -NoTypeInformation -Force
+foreach ($object in $workshopCollected) {
+    Export-Csv -Path $configFile.Settings.ExportCSVPath -InputObject $object -NoTypeInformation -Force -Append
+}
 Write-Host "==> Wrote Workshop Details to ${configFile.Settings.ExportCSVPath}" -ForegroundColor Cyan
