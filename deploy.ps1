@@ -9,16 +9,18 @@ $workshopUserInfo   = @{}
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
 Write-Host "==> Creating REST API session" -ForegroundColor Yellow
-New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential) | Out-Null
+New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
 
 do {
     # Increase counter by one
     $count++
     # Set loop variables
     $adUsername         = "User${count}"
-    $adSecurePassword   = ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force
-    Remove-Variable adPassword
+    Add-Type -AssemblyName System.Web
+    $adPassword         = [System.Web.Security.Membership]::GeneratePassword(8, 3)
+    $adSecurePassword   = ConvertTo-SecureString $adPassword -AsPlainText -Force
     $apiPSCredential    = New-Object System.Management.Automation.PSCredential($adUsername, $adSecurePassword)
+    Remove-Variable adSecurePassword
     $pasSafeName        = "RESTAPIWorkshop${count}"
     $pasAppID           = "RESTAPIWorkshop${count}"
     # Save metadata into hash table for reporting later
@@ -107,6 +109,8 @@ do {
             platformID                  = $configFile.Settings.CyberArk.PlatformID
             SafeName                    = $pasSafeName
             automaticManagementEnabled  = $False
+            secretType                  = "password"
+            secret                      = ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force
         }
         Write-Host "==> Adding account object for ${account} to ${pasSafeName}" -ForegroundColor Yellow
         Add-PASAccount @addAccount | Out-Null
