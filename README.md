@@ -1,2 +1,7 @@
 # workshop-orchestration
-REST API Workshop Orchestration
+
+CyberArk PAS REST API Workshop Orchestration
+
+## License
+
+MIT
