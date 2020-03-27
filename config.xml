@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<Settings>
+    <AttendeeCount>5</AttendeeCount>
+    <CSVExportPath>C:\Users\jgarcia\Documents</CSVExportPath>
+    <API>
+        <BaseURL>https://cyberark.joegarcia.dev</BaseURL>
+        <AuthType>LDAP</AuthType>
+    </API>
+    <ActiveDirectory>
+        <Domain>joegarcia.dev</ADDomain>
+        <UsersPath>CN=Users,DC=joegarcia,DC=com</ADUsersPath>
+        <CyberArkUsers>P-CyberArk_Vault_Users</ADCyberArkUsers>
+    </ActiveDirectory>
+    <CyberArk>
+        <ManagingCPM>PasswordManager</ManagingCPM>
+        <PlatformID>WinDomain</PlatformID>
+    </CyberArk>
+</Settings>

@@ -61,9 +61,30 @@ CyberArk PAS REST API Workshop Orchestration
   * Account names are retrieved from [MOCK_DATA.csv](MOCK_DATA.csv).
   * Automatic management of account objects is not enabled.
 
-## config.ps1
+## config.xml
 
-Stay tuned...
+* `AttendeeCount`
+  * The number of attendees/users to create environments for.
+* `CSVExportPath`
+  * The local filesystem path to export Workshop Details to for users.
+* `BaseURL`
+  * The PVWA address where the PAS Web Service is hosted.
+  * e.g. `https://pvwa.example.com`
+* `AuthType`
+  * The authentication type (`cyberark`, `ldap`, `radius`, `windows`) to use when authenticating to the PAS REST API.
+* `Domain`
+  * The Active Directory domain name 
+  * e.g. `joegarcia.dev`
+* `UsersPath`
+  * The path to the Organizational Unit (OU) or Container (CN) to create the Active Directory user object within.
+  * e.g. `CN=Users,DC=joegarcia,DC=dev`
+* `CyberArkUsers`
+  * The name of the security group that is mapped to the CyberArk Users role within PrivateArk Client.  This is the security group that grants users access to login via PVWA.
+* `ManagingCPM`
+  * This would remain `PasswordManager` unless specifically changed during installation or it is necessary to target an additional CPM than the default.
+* `PlatformID`
+  * The out-of-the-box platform for `Windows Domain Accounts` is `WinDomain`.  If you copied `WinDomain` and created your own, reference that PlatformID instead.
+  * Automatic management of the account will be disabled, so any `PlatformID` can be used.
 
 ## teardown.ps1
 
