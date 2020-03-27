@@ -2,9 +2,9 @@ Import-Module psPAS
 Import-Module ActiveDirectory
 
 # Import XML Configuration Settings from config.xml
-[xml]$configFile = Get-Content "config.xml"
-$count = 0
-$workshopUserInfo = @{}
+[xml]$configFile    = Get-Content "config.xml"
+$count              = 0
+$workshopUserInfo   = @{}
 
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
@@ -15,12 +15,12 @@ do {
     # Increase counter by one
     $count++
     # Set loop variables
-    $adUsername = "User${count}"
-    $adSecurePassword = ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force
+    $adUsername         = "User${count}"
+    $adSecurePassword   = ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force
     Remove-Variable adPassword
-    $apiPSCredential = New-Object System.Management.Automation.PSCredential($adUsername, $adSecurePassword)
-    $pasSafeName = "RESTAPIWorkshop${count}"
-    $pasAppID = "RESTAPIWorkshop${count}"
+    $apiPSCredential    = New-Object System.Management.Automation.PSCredential($adUsername, $adSecurePassword)
+    $pasSafeName        = "RESTAPIWorkshop${count}"
+    $pasAppID           = "RESTAPIWorkshop${count}"
     # Save metadata into hash table for reporting later
     $workshopUserInfo.Append($adUsername, $adPassword, $pasSafeName, $pasAppID)
     
@@ -36,20 +36,27 @@ do {
         SamAccountName          = $adUsername
     }
     Write-Host "==> Creating Active Directory User Object ${adUsername}" -ForegroundColor Yellow
-    New-ADUser @newADUser
+    New-ADUser @newADUser | Out-Null
 
     Write-Host "==> Setting Password for ${adUsername}" -ForegroundColor Yellow
-    Set-ADAccountPassword -Identity $adUsername -NewPassword $adSecurePassword
+    Set-ADAccountPassword -Identity $adUsername -NewPassword $adSecurePassword | Out-Null
 
     Write-Host "==> Add ${adUsername} to ${configFile.Settings.ActiveDirectory.CyberArkUsers}" -ForegroundColor Yellow
-    Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername
+    Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername | Out-Null
 
     Write-Host "==> Creating REST API session as ${adUsername} to apply EPVUser license" -ForegroundColor Yellow
     New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type LDAP -Credential $apiPSCredential | Close-PASSession
     Write-Host "==> Closed REST API session as ${adUsername}" -ForegroundColor Yellow
 
     Write-Host "==> Adding safe ${pasSafeName}" -ForegroundColor Yellow
-    Add-Safe -SafeName $pasSafeName -Description "REST API Workshop Safe for User ${count}" -ManagingCPM $configFile.Settings.CyberArk.ManagingCPM -NumberOfVersionsRetention 1
+    $addSafe = @{
+        SafeName                = $pasSafeName
+        Description             = "REST API Workshop Safe for User ${count}"
+        ManagingCPM             = $configFile.Settings.CyberArk.ManagingCPM
+        NumberOfDaysRetention   = 1
+        ErrorAction             = SilentlyContinue
+    }
+    Add-Safe @addSafe | Out-Null
 
     $addSafeMember = @{
         SafeName                                = $pasSafeName
@@ -78,31 +85,31 @@ do {
         MoveAccountsAndFolders                  = $False
     }
     Write-Host "==> Adding ${adUsername} as Safe Owner of ${pasSafeName}" -ForegroundColor Yellow
-    Add-PASSafeMember @addSafeMember
+    Add-PASSafeMember @addSafeMember | Out-Null
 
     $addApplication = @{
-        AppID = $pasAppID
-        Description = "REST API Workshop Application ID for User ${count}"
-        Location = "\Applications"
+        AppID               = $pasAppID
+        Description         = "REST API Workshop Application ID for User ${count}"
+        Location            = "\Applications"
         AccessPermittedFrom = 9
-        AccessPermittedTo = 17
+        AccessPermittedTo   = 17
     }
     Write-Host "==> Creating $pasAppID Application ID" -ForegroundColor Yellow
-    Add-PASApplication @addApplication
+    Add-PASApplication @addApplication | Out-Null
     Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
-    Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0"
+    Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
 
     $mockAccounts = Import-Csv -Path MOCK_DATA.csv
     foreach ($account in $mockAccounts) {
         $addAccount = @{
-            address = $configFile.Settings.ActiveDirectory.Domain
-            username = $account
-            platformID = $configFile.Settings.CyberArk.PlatformID
-            SafeName = $pasSafeName
-            automaticManagementEnabled = $False
+            address                     = $configFile.Settings.ActiveDirectory.Domain
+            username                    = $account
+            platformID                  = $configFile.Settings.CyberArk.PlatformID
+            SafeName                    = $pasSafeName
+            automaticManagementEnabled  = $False
         }
         Write-Host "==> Adding account object for ${account} to ${pasSafeName}" -ForegroundColor Yellow
-        Add-PASAccount @addAccount
+        Add-PASAccount @addAccount | Out-Null
     }
 
 } until ($count -eq $configFile.Settings.AttendeeCount)
@@ -113,5 +120,5 @@ Close-PASSession
 Write-Host ""
 Write-Host "==> Deployment complete" -ForegroundColor Green
 
-# Export $workshopUserInfo hash table to CSV
-# $configFile.Settings.CSVExportPath
+Export-Csv -Path $configFile.Settings.ExportCSVPath -InputObject $workshopUserInfo -NoTypeInformation -Force
+Write-Host "==> Wrote Workshop Details to ${configFile.Settings.ExportCSVPath}" -ForegroundColor Cyan

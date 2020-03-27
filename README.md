@@ -6,7 +6,7 @@ CyberArk PAS REST API Workshop Orchestration
 
 ### Inputs
 
-* Number of people attending workshop
+* See [config.xml](#configxml)
 
 ### Outputs
 
@@ -88,8 +88,19 @@ CyberArk PAS REST API Workshop Orchestration
 
 ## teardown.ps1
 
-Stay tuned...
+### Inputs
 
+See [config.xml](#configxml).
+
+### Outputs
+
+* Removal of:
+  * Active Directory User Object
+  * CyberArk Account Objects within Safe
+  * CyberArk EPVUser Licensed User from Safe Ownership
+  * CyberArk Application Identity
+
+Unfortunately, the safe will need to be removed 24 hours after [teardown.ps1](teardown.ps1) is ran due to retention policy of 1 day.
 
 ## Maintainer
 
