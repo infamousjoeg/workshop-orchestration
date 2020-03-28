@@ -49,6 +49,7 @@ do {
         Path                    = $configFile.Settings.ActiveDirectory.UsersPath
         SamAccountName          = $adUsername
         AccountPassword         = $adSecurePassword
+        UserPrincipalName       = "${adUsername}@${configFile.Settings.ActiveDirectory.Domain}"
     }
     Write-Host "==> Creating Active Directory User Object ${adUsername}" -ForegroundColor Yellow
     try {
