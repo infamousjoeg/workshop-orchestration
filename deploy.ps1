@@ -8,12 +8,16 @@ $workshopUserInfo   = New-Object PSObject
 $workshopCollected  = @()
 
 # Cleanup pre-existing exported CSV
-Remove-Item -Path $configFile.Settings.ExportCSVPath -ErrorAction SilentlyContinue | Out-Null
+Remove-Item -Path $configFile.Settings.CSVExportPath -ErrorAction SilentlyContinue | Out-Null
 
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
 Write-Host "==> Creating REST API session" -ForegroundColor Yellow
-New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
+try {
+    New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
+} catch {
+    Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
+}
 
 do {
     # Increase counter by one
@@ -46,17 +50,33 @@ do {
         SamAccountName          = $adUsername
     }
     Write-Host "==> Creating Active Directory User Object ${adUsername}" -ForegroundColor Yellow
-    New-ADUser @newADUser | Out-Null
+    try {
+        New-ADUser @newADUser | Out-Null
+    } catch {
+        Write-Error "Active Directory User Object could not be created." -ErrorAction Stop
+    }
 
     Write-Host "==> Setting Password for ${adUsername}" -ForegroundColor Yellow
-    Set-ADAccountPassword -Identity $adUsername -NewPassword $adSecurePassword | Out-Null
+    try {
+        Set-ADAccountPassword -Identity $adUsername -NewPassword $adSecurePassword | Out-Null
+    } catch {
+        Write-Error "Active Directory User password could not be set." -ErrorAction Stop
+    }
 
     Write-Host "==> Add ${adUsername} to ${configFile.Settings.ActiveDirectory.CyberArkUsers}" -ForegroundColor Yellow
-    Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername | Out-Null
+    try {
+        Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername | Out-Null
+    } catch {
+        Write-Error "Active Directory User Object could not be added to CyberArk Users AD Security Group." -ErrorAction Stop
+    }
 
     Write-Host "==> Creating REST API session as ${adUsername} to apply EPVUser license" -ForegroundColor Yellow
-    New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type LDAP -Credential $apiPSCredential | Close-PASSession
-    Write-Host "==> Closed REST API session as ${adUsername}" -ForegroundColor Yellow
+    try {
+        New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type LDAP -Credential $apiPSCredential | Close-PASSession
+        Write-Host "==> Closed REST API session as ${adUsername}" -ForegroundColor Yellow
+    } catch {
+        Write-Error "Could not assign EPVUser license to Active Directory User." -ErrorAction Stop
+    }
 
     Write-Host "==> Adding safe ${pasSafeName}" -ForegroundColor Yellow
     $addSafe = @{
@@ -95,7 +115,11 @@ do {
         MoveAccountsAndFolders                  = $False
     }
     Write-Host "==> Adding ${adUsername} as Safe Owner of ${pasSafeName}" -ForegroundColor Yellow
-    Add-PASSafeMember @addSafeMember | Out-Null
+    try {
+        Add-PASSafeMember @addSafeMember | Out-Null
+    } catch {
+        Write-Error "Active Directory User could not be added to CyberArk Safe as Safe Owner." -ErrorAction Stop
+    }
 
     $addApplication = @{
         AppID               = $pasAppID
@@ -105,9 +129,17 @@ do {
         AccessPermittedTo   = 17
     }
     Write-Host "==> Creating $pasAppID Application ID" -ForegroundColor Yellow
-    Add-PASApplication @addApplication | Out-Null
+    try {
+        Add-PASApplication @addApplication | Out-Null
+    } catch {
+        Write-Error "Application Identity could not be created." -ErrorAction Stop
+    }
     Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
-    Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
+    try {
+        Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
+    } catch {
+        Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
+    }
 
     $mockAccounts = Import-Csv -Path MOCK_DATA.csv
     foreach ($account in $mockAccounts) {
@@ -121,7 +153,11 @@ do {
             secret                      = ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force
         }
         Write-Host "==> Adding account object for ${account} to ${pasSafeName}" -ForegroundColor Yellow
-        Add-PASAccount @addAccount | Out-Null
+        try {
+            Add-PASAccount @addAccount | Out-Null
+        } catch {
+            Write-Error "Could not create dummy user ${account.username} in CyberArk Safe." -ErrorAction Stop
+        }
     }
 
 } until ($count -eq $configFile.Settings.AttendeeCount)
@@ -133,6 +169,10 @@ Write-Host ""
 Write-Host "==> Deployment complete" -ForegroundColor Green
 
 foreach ($object in $workshopCollected) {
-    Export-Csv -Path $configFile.Settings.ExportCSVPath -InputObject $object -NoTypeInformation -Force -Append
+    try {
+        Export-Csv -Path $configFile.Settings.CSVExportPath -InputObject $object -NoTypeInformation -Force -Append
+    } catch {
+        Write-Error "Could not complete export to CSV.  Error occured on ${object.username}." -ErrorAction Stop
+    }
 }
-Write-Host "==> Wrote Workshop Details to ${configFile.Settings.ExportCSVPath}" -ForegroundColor Cyan
+Write-Host "==> Wrote Workshop Details to ${configFile.Settings.CSVExportPath}" -ForegroundColor Cyan
