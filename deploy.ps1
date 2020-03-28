@@ -15,6 +15,7 @@ Write-Host "==> Creating REST API session" -ForegroundColor Yellow
 try {
     New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
 } catch {
+    Write-Error $_
     Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
 }
 
@@ -55,6 +56,7 @@ do {
     try {
         New-ADUser @newADUser | Out-Null
     } catch {
+        Write-Error $_
         Write-Error "Active Directory User Object could not be created." -ErrorAction Stop
     }
 
@@ -62,6 +64,7 @@ do {
     try {
         Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername | Out-Null
     } catch {
+        Write-Error $_
         Write-Error "Active Directory User Object could not be added to CyberArk Users AD Security Group." -ErrorAction Stop
     }
 
@@ -70,6 +73,7 @@ do {
         New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type LDAP -Credential $apiPSCredential | Close-PASSession
         Write-Host "==> Closed REST API session as ${adUsername}" -ForegroundColor Yellow
     } catch {
+        Write-Error $_
         Write-Error "Could not assign EPVUser license to Active Directory User." -ErrorAction Stop
     }
 
@@ -113,6 +117,7 @@ do {
     try {
         Add-PASSafeMember @addSafeMember | Out-Null
     } catch {
+        Write-Error $_
         Write-Error "Active Directory User could not be added to CyberArk Safe as Safe Owner." -ErrorAction Stop
     }
 
@@ -127,12 +132,14 @@ do {
     try {
         Add-PASApplication @addApplication | Out-Null
     } catch {
+        Write-Error $_
         Write-Error "Application Identity could not be created." -ErrorAction Stop
     }
     Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
     try {
         Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
     } catch {
+        Write-Error $_
         Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
     }
 
@@ -151,6 +158,7 @@ do {
         try {
             Add-PASAccount @addAccount | Out-Null
         } catch {
+            Write-Error $_
             Write-Error "Could not create dummy user ${account.username} in CyberArk Safe." -ErrorAction Stop
         }
     }
@@ -167,6 +175,7 @@ foreach ($object in $workshopCollected) {
     try {
         Export-Csv -Path $configFile.Settings.CSVExportPath -InputObject $object -NoTypeInformation -Force -Append
     } catch {
+        Write-Error $_
         Write-Error "Could not complete export to CSV.  Error occured on ${object.username}." -ErrorAction Stop
     }
 }
