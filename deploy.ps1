@@ -49,19 +49,13 @@ do {
         PasswordNeverExpires    = $True
         Path                    = $configFile.Settings.ActiveDirectory.UsersPath
         SamAccountName          = $adUsername
+        AccountPassword         = $adSecurePassword
     }
     Write-Host "==> Creating Active Directory User Object ${adUsername}" -ForegroundColor Yellow
     try {
         New-ADUser @newADUser | Out-Null
     } catch {
         Write-Error "Active Directory User Object could not be created." -ErrorAction Stop
-    }
-
-    Write-Host "==> Setting Password for ${adUsername}" -ForegroundColor Yellow
-    try {
-        Set-ADAccountPassword -Identity $adUsername -NewPassword $adSecurePassword | Out-Null
-    } catch {
-        Write-Error "Active Directory User password could not be set." -ErrorAction Stop
     }
 
     Write-Host "==> Add ${adUsername} to ${configFile.Settings.ActiveDirectory.CyberArkUsers}" -ForegroundColor Yellow
@@ -151,7 +145,7 @@ do {
             SafeName                    = $pasSafeName
             automaticManagementEnabled  = $False
             secretType                  = "password"
-            secret                      = ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force
+            secret                      = $(ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force)
         }
         Write-Host "==> Adding account object for ${account} to ${pasSafeName}" -ForegroundColor Yellow
         try {
