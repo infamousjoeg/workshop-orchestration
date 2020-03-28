@@ -47,6 +47,7 @@ do {
         Description             = "REST API Workshop User ${count}"
         DisplayName             = "User ${count}"
         PasswordNeverExpires    = $True
+        Enabled                 = $True
         Path                    = $configFile.Settings.ActiveDirectory.UsersPath
         SamAccountName          = $adUsername
         AccountPassword         = $adSecurePassword
