@@ -25,7 +25,7 @@ do {
     # Set loop variables
     $adUsername         = "User${count}"
     Add-Type -AssemblyName System.Web
-    $adPassword         = [System.Web.Security.Membership]::GeneratePassword(12, 5)
+    $adPassword         = "4ut0m4t10n${count}727"
     $adSecurePassword   = ConvertTo-SecureString $adPassword -AsPlainText -Force
     $apiPSCredential    = New-Object System.Management.Automation.PSCredential($adUsername, $adSecurePassword)
     Remove-Variable adSecurePassword
