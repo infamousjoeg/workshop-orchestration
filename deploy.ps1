@@ -4,7 +4,6 @@ Import-Module ActiveDirectory
 # Import XML Configuration Settings from config.xml
 [xml]$configFile    = Get-Content "config.xml"
 $count              = 0
-$workshopUserInfo   = New-Object PSObject
 $workshopCollected  = @()
 
 # Cleanup pre-existing exported CSV
@@ -32,11 +31,13 @@ do {
     $pasSafeName        = "RESTAPIWorkshop${count}"
     $pasAppID           = "RESTAPIWorkshop${count}"
     # Save details into PSObject for export to CSV later
-    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "username" -Value $adUsername
-    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "password" -Value $adPassword
-    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "safe" -Value $pasSafeName
-    $workshopUserInfo | Add-Member MemberType NoteProperty -Name "appid" -Value $pasAppID
+    $workshopUserInfo   = New-Object PSObject
+    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name username -Value $adUsername
+    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name password -Value $adPassword
+    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name safe -Value $pasSafeName
+    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name appid -Value $pasAppID
     $workshopCollected += $workshopUserInfo
+    Remove-Variable workshopUserInfo
     
     # Create user object in Active Directory
     $newADUser = @{
