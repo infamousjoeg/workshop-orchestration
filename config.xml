@@ -8,7 +8,7 @@
     </API>
     <ActiveDirectory>
         <Domain>joegarcia.dev</Domain>
-        <UsersPath>CN=Users,DC=joegarcia,DC=com</UsersPath>
+        <UsersPath>CN=Users,DC=joegarcia,DC=dev</UsersPath>
         <CyberArkUsers>P-CyberArk_Vault_Users</CyberArkUsers>
     </ActiveDirectory>
     <CyberArk>
