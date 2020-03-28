@@ -45,7 +45,6 @@ do {
         ChangePasswordAtLogon   = $False
         Description             = "REST API Workshop User ${count}"
         DisplayName             = "User ${count}"
-        Enabled                 = $True
         PasswordNeverExpires    = $True
         Path                    = $configFile.Settings.ActiveDirectory.UsersPath
         SamAccountName          = $adUsername
