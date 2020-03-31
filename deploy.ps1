@@ -108,6 +108,7 @@ do {
         $workshopUserInfo.ADUser = "True"
     } catch {
         # If unsuccessful, throw error messages and stop the script
+        Close-PASSession
         Write-Error $_
         Write-Error "Active Directory User Object could not be created." -ErrorAction Stop
     }
@@ -117,6 +118,7 @@ do {
     try {
         Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername | Out-Null
     } catch {
+        Close-PASSession
         Write-Error $_
         Write-Error "Active Directory User Object could not be added to CyberArk Users AD Security Group." -ErrorAction Stop
     }
@@ -130,14 +132,17 @@ do {
         # NumberOfDaysRetention to 0 allows for immediate deletion of the safe...
         # ... and all account objects stored within.
         NumberOfDaysRetention   = 0
-        # ErrorAction set to SilentlyContinue will suppress an error caused...
-        # ... when the safe already exists and the script will continue.
-        ErrorAction             = SilentlyContinue
     }
-    # Add the safe in EPV
-    Add-PASSafe @addSafe | Out-Null
-    # If successfully created or already present, flip deployment detail from False to True
-    $workshopUserInfo.CreateSafe = "True"
+    try {
+        # Add the safe in EPV
+        Add-PASSafe @addSafe | Out-Null
+        # If successfully created, flip deployment detail from False to True
+        $workshopUserInfo.CreateSafe = "True"
+    } catch {
+        Close-PASSession
+        Write-Error $_
+        Write-Error "CyberArk Safe ${pasSafeName} could not be added." -ErrorAction Stop
+    }
 
     # Create hash table of parameters to splat into Add-PASSafeMember cmdlet
     $addSafeMember = @{

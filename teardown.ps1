@@ -49,8 +49,9 @@ do {
     # Remove user object in Active Directory
     Write-Host "==> Removing Active Directory User Object ${adUsername}" -ForegroundColor Yellow
     try {
-        Remove-ADUser -Identity $adUsername | Out-Null
+        Remove-ADUser -Identity $adUsername -Confirm $False | Out-Null
     } catch {
+        Close-PASSession
         Write-Error $_
         Write-Error "Active Directory User Object ${adUsername} could not be removed." -ErrorAction Stop
     }
@@ -60,6 +61,7 @@ do {
     try {
         Remove-PASSafe -SafeName $pasSafeName | Out-Null
     } catch {
+        Close-PASSession
         Write-Error $_
         Write-Error "CyberArk Safe ${pasSafeName} could not be deleted." -ErrorAction Stop
     }
@@ -69,6 +71,7 @@ do {
     try {
         Remove-PASApplication -AppID $pasAppID | Out-Null
     } catch {
+        Close-PASSession
         Write-Error $_
         Write-Error "CyberArk Application ID ${pasAppID} could not be deleted." -ErrorAction Stop
     }
