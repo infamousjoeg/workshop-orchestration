@@ -1,6 +1,8 @@
 Import-Module psPAS
 Import-Module ActiveDirectory
 
+$scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+
 # Import XML Configuration Settings from config.xml
 [xml]$configFile    = Get-Content "config.xml"
 $count              = 0
@@ -26,9 +28,6 @@ do {
     $adUsername         = "User${count}"
     Add-Type -AssemblyName System.Web
     $adPassword         = "4ut0m4t!0n${count}727"
-    $adSecurePassword   = ConvertTo-SecureString $adPassword -AsPlainText -Force
-    $apiPSCredential    = New-Object System.Management.Automation.PSCredential($adUsername, $adSecurePassword)
-    Remove-Variable adSecurePassword
     $pasSafeName        = "RESTAPIWorkshop${count}"
     $pasAppID           = "RESTAPIWorkshop${count}"
     # Save details into PSObject for export to CSV later
@@ -50,7 +49,7 @@ do {
         Enabled                 = $True
         Path                    = $configFile.Settings.ActiveDirectory.UsersPath
         SamAccountName          = $adUsername
-        AccountPassword         = $adSecurePassword
+        AccountPassword         = $(ConvertTo-SecureString $adPassword -AsPlainText -Force)
         UserPrincipalName       = "${adUsername}@${configFile.Settings.ActiveDirectory.Domain}"
     }
     Write-Host "==> Creating Active Directory User Object ${adUsername}" -ForegroundColor Yellow
@@ -135,7 +134,12 @@ do {
         Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
     }
 
-    $mockAccounts = Import-Csv -Path MOCK_DATA.csv
+    if (Test-Path -Path "${scriptDir}\MOCK_DATA.csv") {
+        $mockAccounts = Import-Csv -Path "${scriptDir}\MOCK_DATA.csv"
+    } else {
+        Write-Error "Could not find MOCK_DATA.csv in the script's directory." -ErrorAction Stop
+    }
+
     foreach ($account in $mockAccounts) {
         $addAccount = @{
             address                     = $configFile.Settings.ActiveDirectory.Domain
