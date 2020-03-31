@@ -16,7 +16,7 @@ try {
 if ($configFile.Settings.AttendeeCount -le 0 -or !$configFile.Settings.AttendeeCount) {
     Write-Error "Settings.AttendeeCount in config.xml must be greater than zero." -ErrorAction Stop
 }
-if (!Test-Path -Path $configFile.Settings.CSVExportPath) {
+if (!$(Test-Path -Path $configFile.Settings.CSVExportPath)) {
     Write-Error "Settings.CSVExportPath must be a valid file path within config.xml." -ErrorAction Stop
 }
 if (!$configFile.API.BaseURL -or !$configFile.API.BaseURL -notcontains "http") {
@@ -201,7 +201,7 @@ do {
     }
 
     # Check that MOCK_DATA.csv exists in the script directory
-    if (Test-Path -Path "${scriptDir}\MOCK_DATA.csv") {
+    if ($(Test-Path -Path "${scriptDir}\MOCK_DATA.csv")) {
         # If it does, we import the CSV data
         $mockAccounts = Import-Csv -Path "${scriptDir}\MOCK_DATA.csv"
     } else {
