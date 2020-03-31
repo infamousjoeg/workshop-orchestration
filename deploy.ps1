@@ -20,31 +20,31 @@ if ($configFile.Settings.AttendeeCount -le 0 -or !$configFile.Settings.AttendeeC
     Write-Error "Settings.AttendeeCount in config.xml must be greater than zero." -ErrorAction Stop
 }
 try {
-    New-Item -Type file $configFile.Settings.CSVExportPath
+    New-Item -Type file $configFile.Settings.CSVExportPath | Out-Null
 } catch {
     Write-Error $_
     Write-Error "Settings.CSVExportPath must be a valid file path within config.xml."
     Write-Error "If the path exists, please check NTFS permissions." -ErrorAction Stop
 }
-if (!$configFile.API.BaseURL -or $configFile.API.BaseURL -notmatch "[http|https]") {
+if (!$configFile.Settings.API.BaseURL -or $configFile.Settings.API.BaseURL -notmatch "[http|https]") {
     Write-Error "Settings.API.BaseURL must be a valid URL beginning with https:// or http:// in config.xml." -ErrorAction Stop
 }
-if (!$configFile.API.AuthType -or $configFile.API.AuthType.ToLower() -ne "[cyberark|ldap|windows|radius]") {
+if (!$configFile.Settings.API.AuthType -or $configFile.Settings.API.AuthType.ToLower() -ne "[cyberark|ldap|windows|radius]") {
     Write-Error "Settings.API.AuthType must match cyberark, ldap, windows, or radius in config.xml." -ErrorAction Stop
 }
-if (!$configFile.ActiveDirectory.Domain) {
+if (!$configFile.Settings.ActiveDirectory.Domain) {
     Write-Error "Settings.ActiveDirectory.Domain must be present in config.xml."
 }
-if (!$configFile.ActiveDirectory.UsersPath) {
+if (!$configFile.Settings.ActiveDirectory.UsersPath) {
     Write-Error "Settings.ActiveDirectory.UsersPath must be present in config.xml."
 }
-if (!$configFile.ActiveDirectory.CyberArkUsers) {
+if (!$configFile.Settings.ActiveDirectory.CyberArkUsers) {
     Write-Error "Settings.ActiveDirectory.CyberArkUsers must be present in config.xml."
 }
-if (!$configFile.CyberArk.ManagingCPM) {
+if (!$configFile.Settings.CyberArk.ManagingCPM) {
     Write-Error "Settings.CyberArk.ManagingCPM must be present in config.xml."
 }
-if (!$configFile.CyberArk.PlatformID) {
+if (!$configFile.Settings.CyberArk.PlatformID) {
     Write-Error "Settings.CyberArk.PlatformID must be present in config.xml."
 }
 
