@@ -78,6 +78,22 @@ do {
 
 } until ($count -eq $configFile.Settings.AttendeeCount)
 
+Write-Host "==> Removing LDAP Directory Mapping of D-RESTAPIWorkshop_Users"
+try {
+    Get-PASDirectoryMapping -DirectoryName $configFile.Settings.ActiveDirectory.Domain -MappingID RESTAPIWorkshop | Remove-PASDirectoryMapping
+} catch {
+    Write-Error $_
+    Write-Error "Could not remove LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ErrorAction Stop
+}
+
+Write-Host "==> Removing CyberArk Users Security Group for Workshop"
+try {
+    Remove-ADGroup -Identity D-RESTAPIWorkshop_Users -Confirm:$False
+} catch {
+    Write-Error $_
+    Write-Error "Could not remove CyberArk Users security group D-RESTAPIWorkshop_Users in Active Directory." -ErrorAction Stop
+}
+
 Write-Host "==> Closed REST API session" -ForegroundColor Yellow
 # Logoff the PAS REST API
 Close-PASSession

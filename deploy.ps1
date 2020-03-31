@@ -38,8 +38,8 @@ if (!$configFile.Settings.ActiveDirectory.Domain) {
 if (!$configFile.Settings.ActiveDirectory.UsersPath) {
     Write-Error "Settings.ActiveDirectory.UsersPath must be present in config.xml."
 }
-if (!$configFile.Settings.ActiveDirectory.CyberArkUsers) {
-    Write-Error "Settings.ActiveDirectory.CyberArkUsers must be present in config.xml."
+if (!$configFile.Settings.ActiveDirectory.GroupsPath) {
+    Write-Error "Settings.ActiveDirectory.GroupsPath must be present in config.xml."
 }
 if (!$configFile.Settings.CyberArk.ManagingCPM) {
     Write-Error "Settings.CyberArk.ManagingCPM must be present in config.xml."
@@ -58,6 +58,42 @@ try {
 } catch {
     Write-Error $_
     Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
+}
+
+Write-Host "==> Creating CyberArk Users Security Group for Workshop"
+# Create hash table of parameters to splat into New-ADGroup cmdlet
+$newADGroup = @{
+    Name = D-RESTAPIWorkshop_Users
+    SamAccountName = D-RESTAPIWorkshop_Users
+    GroupCategory = Security
+    GroupScope = Global
+    DisplayName = D-RESTAPIWorkshop_Users
+    Path = $configFile.Settings.ActiveDirectory.GroupsPath
+    Description = "CyberArk Users group for REST API Workshop"
+}
+try {
+    # Create Active Directory Security Group for New LDAP Mapping in PAS
+    New-ADGroup @newADGroup
+} catch {
+    Write-Error $_
+    Write-Error "Could not create CyberArk Users security group in Active Directory." -ErrorAction Stop
+}
+
+Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group"
+# Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
+$newPASDirectoryMapping = @{
+    DirectoryName = $configFile.Settings.ActiveDirectory.Domain
+    LDAPBranch = $configFile.Settings.ActiveDirectory.GroupsPath
+    DomainGroups = D-RESTAPIWorkshop_Users
+    MappingName = RESTAPIWorkshop
+    MappingAuthorizations = AddSafes
+}
+try {
+    # Create new LDAP Directory Mapping in PAS for the workshop's Users security group
+    New-PASDirectoryMapping @newPASDirectoryMapping
+} catch {
+    Write-Error $_
+    Write-Error "Could not create new LDAP directory mapping for D-RESTAPIWorkshop_Users." -ErrorAction Stop
 }
 
 # Set count for do...until loop to 0
@@ -159,8 +195,8 @@ do {
         RenameAccounts                          = $True
         DeleteAccounts                          = $True
         UnlockAccounts                          = $True
-        ManageSafe                              = $False
-        ManageSafeMembers                       = $False
+        ManageSafe                              = $True
+        ManageSafeMembers                       = $True
         BackupSafe                              = $False
         ViewAuditLog                            = $True
         ViewSafeMembers                         = $True

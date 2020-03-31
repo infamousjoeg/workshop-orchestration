@@ -9,7 +9,7 @@
     <ActiveDirectory>
         <Domain>joegarcia.dev</Domain>
         <UsersPath>CN=Users,DC=joegarcia,DC=dev</UsersPath>
-        <CyberArkUsers>P-CyberArk_Vault_Users</CyberArkUsers>
+        <GroupsPath>OU=Security Groups,OU=Groups,DC=joegarcia,DC=dev</GroupsPath>
     </ActiveDirectory>
     <CyberArk>
         <ManagingCPM>PasswordManager</ManagingCPM>
