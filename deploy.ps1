@@ -160,16 +160,28 @@ do {
     }
 
     Write-Host "==> Adding safe: ${pasSafeName}" -ForegroundColor Yellow
-    # Create hash table of parameters to splat into the Add-PASSafe cmdlet
+    # Create hash table of parameters to splat into Invoke-RestMethod
     $addSafe = @{
-        SafeName                = $pasSafeName
-        Description             = "REST API Workshop Safe for User ${count}"
-        ManagingCPM             = $configFile.Settings.CyberArk.ManagingCPM
-        NumberOfDaysRetention   = 1
+        Uri = "${configFile.Settings.API.BaseURL}/PasswordVault/api/safes"
+        Method = "Post"
+        ContentType = "application/json"
+        # Use the already established WebSession from psPAS module
+        WebSession = $(Get-PASSession).WebSession
     }
+    # Create hash table of JSON body to send in request to Add Safe
+    $bodyAddSafe = @{
+        safe = @{
+            SafeName                = $pasSafeName
+            Description             = "REST API Workshop Safe for User ${count}"
+            ManagingCPM             = $configFile.Settings.CyberArk.ManagingCPM
+            NumberOfDaysRetention   = 0
+        }
+    } | ConvertTo-Json -Depth 2 # We add Depth parameter because we have a nested JSON
+
     try {
-        # Add the safe in EPV
-        Add-PASSafe @addSafe | Out-Null
+        # We're going to use an undocumented v2 API endpoint for Add Safe
+        # This will allow us to set NumberOfDaysRetention to 0 for instant removal
+        Invoke-RestMethod @addSafe -Body $bodyAddSafe
         # If successfully created, flip deployment detail from False to True
         $workshopUserInfo.CreateSafe = "True"
     } catch {
@@ -235,14 +247,14 @@ do {
         Write-Error $_
         Write-Error "Application Identity could not be created." -ErrorAction Stop
     }
-    # Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
-    # try {
-    #     # Add a machineAddress IP of 0.0.0.0 to completely open the App ID up to anyone
-    #     Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
-    # } catch {
-    #     Write-Error $_
-    #     Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
-    # }
+    Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
+    try {
+        # Add a machineAddress IP of 0.0.0.0 to completely open the App ID up to anyone
+        Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
+    } catch {
+        Write-Error $_
+        Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
+    }
 
     # Check that MOCK_DATA.csv exists in the script directory
     if ($(Test-Path -Path "${scriptDir}\MOCK_DATA.csv")) {
