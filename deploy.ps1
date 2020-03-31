@@ -16,8 +16,12 @@ try {
 if ($configFile.Settings.AttendeeCount -le 0 -or !$configFile.Settings.AttendeeCount) {
     Write-Error "Settings.AttendeeCount in config.xml must be greater than zero." -ErrorAction Stop
 }
-if (!$(Test-Path -Path $configFile.Settings.CSVExportPath)) {
-    Write-Error "Settings.CSVExportPath must be a valid file path within config.xml." -ErrorAction Stop
+try {
+    New-Item -Type file $configFile.Settings.CSVExportPath
+} catch {
+    Write-Error $_
+    Write-Error "Settings.CSVExportPath must be a valid file path within config.xml."
+    Write-Error "If the path exists, please check NTFS permissions." -ErrorAction Stop
 }
 if (!$configFile.API.BaseURL -or !$configFile.API.BaseURL -notcontains "http") {
     Write-Error "Settings.API.BaseURL must be a valid URL beginning with https:// or http:// in config.xml." -ErrorAction Stop
