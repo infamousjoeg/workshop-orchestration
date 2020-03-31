@@ -4,6 +4,9 @@ Import-Module ActiveDirectory
 # Set the script path to a variable in case it is run from another path
 $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
+# Cleanup pre-existing exported CSV
+Remove-Item -Path $configFile.Settings.CSVExportPath -ErrorAction SilentlyContinue | Out-Null
+
 # Import XML Configuration Settings from config.xml
 try {
     [xml]$configFile = Get-Content "${scriptDir}\config.xml"
@@ -44,9 +47,6 @@ if (!$configFile.CyberArk.ManagingCPM) {
 if (!$configFile.CyberArk.PlatformID) {
     Write-Error "Settings.CyberArk.PlatformID must be present in config.xml."
 }
-
-# Cleanup pre-existing exported CSV
-Remove-Item -Path $configFile.Settings.CSVExportPath -ErrorAction SilentlyContinue | Out-Null
 
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
