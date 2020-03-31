@@ -26,10 +26,10 @@ try {
     Write-Error "Settings.CSVExportPath must be a valid file path within config.xml."
     Write-Error "If the path exists, please check NTFS permissions." -ErrorAction Stop
 }
-if (!$configFile.API.BaseURL -or $configFile.API.BaseURL -notmatch "http") {
+if (!$configFile.API.BaseURL -or $configFile.API.BaseURL -notmatch "[http|https]") {
     Write-Error "Settings.API.BaseURL must be a valid URL beginning with https:// or http:// in config.xml." -ErrorAction Stop
 }
-if (!$configFile.API.AuthType -or $configFile.API.AuthType.ToLower() -ne "ldap" -or !$configFile.API.AuthType.ToLower() -ne "windows" -or !$configFile.API.AuthType.ToLower() -ne "cyberark" -or !$configFile.API.AuthType.ToLower() -ne "radius") {
+if (!$configFile.API.AuthType -or $configFile.API.AuthType.ToLower() -ne "[cyberark|ldap|windows|radius]") {
     Write-Error "Settings.API.AuthType must match cyberark, ldap, windows, or radius in config.xml." -ErrorAction Stop
 }
 if (!$configFile.ActiveDirectory.Domain) {
