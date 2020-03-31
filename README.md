@@ -2,6 +2,15 @@
 
 CyberArk PAS REST API Workshop Orchestration
 
+## Requirements
+
+* CyberArk PAS Core minimum version: 10.8
+  * LDAP Integration configured in CyberArk PAS Core
+  * A CyberArk Vault Admin user to run deploy.ps1 and teardown.ps1
+  * Valid SSL on Password Vault Web Access (PVWA)
+    * _Turning off validation is not supported_
+* Microsoft PowerShell minimum version: 5.0
+
 ## deploy.ps1
 
 ### Inputs
