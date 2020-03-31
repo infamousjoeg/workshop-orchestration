@@ -43,8 +43,8 @@ do {
     $count++
     # Set loop variables
     $adUsername = "User${count}"
-    $pasSafeName = "RESTAPIWorkshop${count}"
-    $pasAppID = "RESTAPIWorkshop${count}"
+    $pasSafeName = "SafeRESTAPIWorkshop${count}"
+    $pasAppID = "AppRESTAPIWorkshop${count}"
     
     # Remove user object in Active Directory
     Write-Host "==> Removing Active Directory User Object ${adUsername}" -ForegroundColor Yellow

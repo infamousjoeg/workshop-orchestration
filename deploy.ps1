@@ -71,8 +71,8 @@ do {
     # Set loop variables
     $adUsername         = "User${count}"
     $adPassword         = "4ut0m4t!0n${count}727"
-    $pasSafeName        = "RESTAPIWorkshop${count}"
-    $pasAppID           = "RESTAPIWorkshop${count}"
+    $pasSafeName        = "SafeRESTAPIWorkshop${count}"
+    $pasAppID           = "AppRESTAPIWorkshop${count}"
     # Save details into PSObject for export to CSV later...
     # ... also set initial values for reporting workshop object creation...
     # ... to False until they are successfully completed.
@@ -199,14 +199,14 @@ do {
         Write-Error $_
         Write-Error "Application Identity could not be created." -ErrorAction Stop
     }
-    Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
-    try {
-        # Add a machineAddress IP of 0.0.0.0 to completely open the App ID up to anyone
-        Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
-    } catch {
-        Write-Error $_
-        Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
-    }
+    # Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
+    # try {
+    #     # Add a machineAddress IP of 0.0.0.0 to completely open the App ID up to anyone
+    #     Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
+    # } catch {
+    #     Write-Error $_
+    #     Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
+    # }
 
     # Check that MOCK_DATA.csv exists in the script directory
     if ($(Test-Path -Path "${scriptDir}\MOCK_DATA.csv")) {
