@@ -69,15 +69,6 @@ do {
         Write-Error "Active Directory User Object could not be added to CyberArk Users AD Security Group." -ErrorAction Stop
     }
 
-    Write-Host "==> Creating REST API session as ${adUsername} to apply EPVUser license" -ForegroundColor Yellow
-    try {
-        New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type LDAP -Credential $apiPSCredential | Close-PASSession
-        Write-Host "==> Closed REST API session as ${adUsername}" -ForegroundColor Yellow
-    } catch {
-        Write-Error $_
-        Write-Error "Could not assign EPVUser license to Active Directory User." -ErrorAction Stop
-    }
-
     Write-Host "==> Adding safe ${pasSafeName}" -ForegroundColor Yellow
     $addSafe = @{
         SafeName                = $pasSafeName
