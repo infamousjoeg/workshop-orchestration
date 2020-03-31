@@ -129,9 +129,9 @@ do {
         SafeName                = $pasSafeName
         Description             = "REST API Workshop Safe for User ${count}"
         ManagingCPM             = $configFile.Settings.CyberArk.ManagingCPM
-        # NumberOfDaysRetention to 0 allows for immediate deletion of the safe...
+        # NumberOfVersionsRetention to 0 allows for immediate deletion of the safe...
         # ... and all account objects stored within.
-        NumberOfDaysRetention   = 0
+        NumberOfVersionsRetention = 0
     }
     try {
         # Add the safe in EPV

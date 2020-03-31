@@ -49,7 +49,7 @@ do {
     # Remove user object in Active Directory
     Write-Host "==> Removing Active Directory User Object ${adUsername}" -ForegroundColor Yellow
     try {
-        Remove-ADUser -Identity $adUsername -Confirm $False | Out-Null
+        Remove-ADUser -Identity $adUsername -Confirm:$False | Out-Null
     } catch {
         Close-PASSession
         Write-Error $_
