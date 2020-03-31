@@ -100,7 +100,7 @@ do {
         AccountPassword         = $(ConvertTo-SecureString $adPassword -AsPlainText -Force)
         UserPrincipalName       = "${adUsername}@${configFile.Settings.ActiveDirectory.Domain}"
     }
-    Write-Host "==> Creating Active Directory User Object ${adUsername}" -ForegroundColor Yellow
+    Write-Host "==> Creating Active Directory User Object: ${adUsername}" -ForegroundColor Yellow
     # Create user object in Active Directory
     try {
         New-ADUser @newADUser | Out-Null
@@ -113,7 +113,7 @@ do {
         Write-Error "Active Directory User Object could not be created." -ErrorAction Stop
     }
 
-    Write-Host "==> Add ${adUsername} to ${configFile.Settings.ActiveDirectory.CyberArkUsers}" -ForegroundColor Yellow
+    Write-Host "==> Add ${adUsername} to CyberArk Users security group" -ForegroundColor Yellow
     # Add the new AD user to the CyberArk Users security group as defined in config.xml
     try {
         Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername | Out-Null
@@ -123,15 +123,13 @@ do {
         Write-Error "Active Directory User Object could not be added to CyberArk Users AD Security Group." -ErrorAction Stop
     }
 
-    Write-Host "==> Adding safe ${pasSafeName}" -ForegroundColor Yellow
+    Write-Host "==> Adding safe: ${pasSafeName}" -ForegroundColor Yellow
     # Create hash table of parameters to splat into the Add-PASSafe cmdlet
     $addSafe = @{
         SafeName                = $pasSafeName
         Description             = "REST API Workshop Safe for User ${count}"
         ManagingCPM             = $configFile.Settings.CyberArk.ManagingCPM
-        # NumberOfVersionsRetention to 0 allows for immediate deletion of the safe...
-        # ... and all account objects stored within.
-        NumberOfVersionsRetention = 0
+        NumberOfDaysRetention   = 1
     }
     try {
         # Add the safe in EPV
@@ -141,7 +139,8 @@ do {
     } catch {
         Close-PASSession
         Write-Error $_
-        Write-Error "CyberArk Safe ${pasSafeName} could not be added." -ErrorAction Stop
+        Write-Error "CyberArk Safe ${pasSafeName} could not be added."
+        Write-Error "Try running teardown.ps1 again to delete any orphaned safes." -ErrorAction Stop
     }
 
     # Create hash table of parameters to splat into Add-PASSafeMember cmdlet
