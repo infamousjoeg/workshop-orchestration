@@ -23,7 +23,7 @@ try {
     Write-Error "Settings.CSVExportPath must be a valid file path within config.xml."
     Write-Error "If the path exists, please check NTFS permissions." -ErrorAction Stop
 }
-if (!$configFile.API.BaseURL -or !$configFile.API.BaseURL -notcontains "http") {
+if (!$configFile.API.BaseURL -or $configFile.API.BaseURL -notmatch "http") {
     Write-Error "Settings.API.BaseURL must be a valid URL beginning with https:// or http:// in config.xml." -ErrorAction Stop
 }
 if (!$configFile.API.AuthType -or $configFile.API.AuthType.ToLower() -ne "ldap" -or !$configFile.API.AuthType.ToLower() -ne "windows" -or !$configFile.API.AuthType.ToLower() -ne "cyberark" -or !$configFile.API.AuthType.ToLower() -ne "radius") {
