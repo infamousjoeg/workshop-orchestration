@@ -29,7 +29,7 @@ try {
 if (!$configFile.Settings.API.BaseURL -or $configFile.Settings.API.BaseURL -notmatch "[http|https]") {
     Write-Error "Settings.API.BaseURL must be a valid URL beginning with https:// or http:// in config.xml." -ErrorAction Stop
 }
-if (!$configFile.Settings.API.AuthType -or $configFile.Settings.API.AuthType.ToLower() -ne "[cyberark|ldap|windows|radius]") {
+if (!$configFile.Settings.API.AuthType -or $configFile.Settings.API.AuthType.ToLower() -notmatch "[cyberark|ldap|windows|radius]") {
     Write-Error "Settings.API.AuthType must match cyberark, ldap, windows, or radius in config.xml." -ErrorAction Stop
 }
 if (!$configFile.Settings.ActiveDirectory.Domain) {
