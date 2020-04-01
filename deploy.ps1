@@ -79,7 +79,7 @@ try {
     Write-Error "Could not create CyberArk Users security group in Active Directory." -ErrorAction Stop
 }
 
-Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group"
+Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group" -ForegroundColor Yellow
 # Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
 $newPASDirectoryMapping = @{
     DirectoryName = $configFile.Settings.ActiveDirectory.Domain
@@ -152,7 +152,7 @@ do {
     Write-Host "==> Add ${adUsername} to CyberArk Users security group" -ForegroundColor Yellow
     # Add the new AD user to the CyberArk Users security group as defined in config.xml
     try {
-        Add-ADGroupMember -Identity $configFile.Settings.ActiveDirectory.CyberArkUsers -Members $adUsername | Out-Null
+        Add-ADGroupMember -Identity "D-RESTAPIWorkshop_Users" -Members $adUsername | Out-Null
     } catch {
         Close-PASSession
         Write-Error $_
