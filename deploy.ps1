@@ -51,7 +51,7 @@ if (!$configFile.Settings.CyberArk.PlatformID) {
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
 
-Write-Host "==> Creating CyberArk Users Security Group for Workshop"
+Write-Host "==> Creating CyberArk Users Security Group for Workshop" -ForegroundColor Yellow
 # Create hash table of parameters to splat into New-ADGroup cmdlet
 $newADGroup = @{
     Name = "D-RESTAPIWorkshop_Users"

@@ -77,7 +77,8 @@ do {
 
 Write-Host "==> Removing LDAP Directory Mapping of D-RESTAPIWorkshop_Users"
 try {
-    Get-PASDirectoryMapping -DirectoryName $configFile.Settings.ActiveDirectory.Domain -MappingID RESTAPIWorkshop | Remove-PASDirectoryMapping
+    # We're going to get a list of all Directory Mappings, find our "RESTAPIWorkshop" mapping name, then remove it - all using pipes!
+    Get-PASDirectoryMapping -DirectoryName $configFile.Settings.ActiveDirectory.Domain | Where-Object { $_.MappingName -eq "RESTAPIWorkshop" } | Remove-PASDirectoryMapping -DirectoryName "joegarcia.dev"
 } catch {
     Write-Error $_
     Write-Error "Could not remove LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ErrorAction SilentlyContinue
