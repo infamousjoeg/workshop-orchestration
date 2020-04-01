@@ -32,7 +32,7 @@ try {
     New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
 } catch {
     Write-Error $_
-    Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
+    Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction SilentlyContinue
 }
 
 # Set count for do...until loop to 0
@@ -51,9 +51,8 @@ do {
     try {
         Remove-ADUser -Identity $adUsername -Confirm:$False | Out-Null
     } catch {
-        Close-PASSession
         Write-Error $_
-        Write-Error "Active Directory User Object ${adUsername} could not be removed." -ErrorAction Stop
+        Write-Error "Active Directory User Object ${adUsername} could not be removed." -ErrorAction SilentlyContinue
     }
 
     # Remove safe from EPV
@@ -61,9 +60,8 @@ do {
     try {
         Remove-PASSafe -SafeName $pasSafeName | Out-Null
     } catch {
-        Close-PASSession
         Write-Error $_
-        Write-Error "CyberArk Safe ${pasSafeName} could not be deleted." -ErrorAction Stop
+        Write-Error "CyberArk Safe ${pasSafeName} could not be deleted." -ErrorAction SilentlyContinue
     }
 
     # Remove application from EPV
@@ -71,9 +69,8 @@ do {
     try {
         Remove-PASApplication -AppID $pasAppID | Out-Null
     } catch {
-        Close-PASSession
         Write-Error $_
-        Write-Error "CyberArk Application ID ${pasAppID} could not be deleted." -ErrorAction Stop
+        Write-Error "CyberArk Application ID ${pasAppID} could not be deleted." -ErrorAction SilentlyContinue
     }
 
 } until ($count -eq $configFile.Settings.AttendeeCount)
@@ -83,7 +80,7 @@ try {
     Get-PASDirectoryMapping -DirectoryName $configFile.Settings.ActiveDirectory.Domain -MappingID RESTAPIWorkshop | Remove-PASDirectoryMapping
 } catch {
     Write-Error $_
-    Write-Error "Could not remove LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ErrorAction Stop
+    Write-Error "Could not remove LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ErrorAction SilentlyContinue
 }
 
 Write-Host "==> Removing CyberArk Users Security Group for Workshop"
@@ -91,7 +88,7 @@ try {
     Remove-ADGroup -Identity D-RESTAPIWorkshop_Users -Confirm:$False
 } catch {
     Write-Error $_
-    Write-Error "Could not remove CyberArk Users security group D-RESTAPIWorkshop_Users in Active Directory." -ErrorAction Stop
+    Write-Error "Could not remove CyberArk Users security group D-RESTAPIWorkshop_Users in Active Directory." -ErrorAction SilentlyContinue
 }
 
 Write-Host "==> Closed REST API session" -ForegroundColor Yellow
