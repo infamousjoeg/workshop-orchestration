@@ -90,7 +90,10 @@ $newPASDirectoryMapping = @{
 }
 try {
     # Create new LDAP Directory Mapping in PAS for the workshop's Users security group
-    New-PASDirectoryMapping @newPASDirectoryMapping
+    New-PASDirectoryMapping @newPASDirectoryMapping | Out-Null
+    while (!$(Get-PASDirectoryMapping -DirectoryName "joegarcia.dev" | Where-Object { $_.MappingName -eq "RESTAPIWorkshop" })) {
+        Start-Sleep 3
+    }
 } catch {
     Write-Error $_
     Write-Error "Could not create new LDAP directory mapping for D-RESTAPIWorkshop_Users." -ErrorAction Stop
@@ -165,8 +168,6 @@ do {
         Uri = "${configFile.Settings.API.BaseURL}/PasswordVault/api/safes"
         Method = "Post"
         ContentType = "application/json"
-        # Use the already established WebSession from psPAS module
-        WebSession = $(Get-PASSession).WebSession
     }
     # Create hash table of JSON body to send in request to Add Safe
     $bodyAddSafe = @{
@@ -181,7 +182,7 @@ do {
     try {
         # We're going to use an undocumented v2 API endpoint for Add Safe
         # This will allow us to set NumberOfDaysRetention to 0 for instant removal
-        Invoke-RestMethod @addSafe -Body $bodyAddSafe
+        Invoke-RestMethod @addSafe -Body $bodyAddSafe -Headers $(Get-PASSession).WebSession.Headers
         # If successfully created, flip deployment detail from False to True
         $workshopUserInfo.CreateSafe = "True"
     } catch {
