@@ -51,23 +51,14 @@ if (!$configFile.Settings.CyberArk.PlatformID) {
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
 
-# Logon to PAS REST API
-Write-Host "==> Creating REST API session" -ForegroundColor Yellow
-try {
-    New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
-} catch {
-    Write-Error $_
-    Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
-}
-
 Write-Host "==> Creating CyberArk Users Security Group for Workshop"
 # Create hash table of parameters to splat into New-ADGroup cmdlet
 $newADGroup = @{
-    Name = D-RESTAPIWorkshop_Users
-    SamAccountName = D-RESTAPIWorkshop_Users
-    GroupCategory = Security
-    GroupScope = Global
-    DisplayName = D-RESTAPIWorkshop_Users
+    Name = "D-RESTAPIWorkshop_Users"
+    SamAccountName = "D-RESTAPIWorkshop_Users"
+    GroupCategory = "Security"
+    GroupScope = "Global"
+    DisplayName = "D-RESTAPIWorkshop_Users"
     Path = $configFile.Settings.ActiveDirectory.GroupsPath
     Description = "CyberArk Users group for REST API Workshop"
 }
@@ -79,14 +70,23 @@ try {
     Write-Error "Could not create CyberArk Users security group in Active Directory." -ErrorAction Stop
 }
 
+# Logon to PAS REST API
+Write-Host "==> Creating REST API session" -ForegroundColor Yellow
+try {
+    New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
+} catch {
+    Write-Error $_
+    Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
+}
+
 Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group"
 # Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
 $newPASDirectoryMapping = @{
     DirectoryName = $configFile.Settings.ActiveDirectory.Domain
     LDAPBranch = $configFile.Settings.ActiveDirectory.GroupsPath
-    DomainGroups = D-RESTAPIWorkshop_Users
-    MappingName = RESTAPIWorkshop
-    MappingAuthorizations = AddSafes
+    DomainGroups = "D-RESTAPIWorkshop_Users"
+    MappingName = "RESTAPIWorkshop"
+    MappingAuthorizations = "AddSafes"
 }
 try {
     # Create new LDAP Directory Mapping in PAS for the workshop's Users security group
