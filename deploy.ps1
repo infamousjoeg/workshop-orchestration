@@ -362,4 +362,4 @@ Write-Host "==> Deployment complete" -ForegroundColor Green
 
 #endregion Deployment
 
-Write-Host "==> Wrote Workshop Details to " + $configFile.Settings.CSVExportPath -ForegroundColor Cyan
+Write-Host "==> Wrote Workshop Details to" $configFile.Settings.CSVExportPath -ForegroundColor Cyan
