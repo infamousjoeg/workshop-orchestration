@@ -75,7 +75,7 @@ do {
 
 } until ($count -eq $configFile.Settings.AttendeeCount)
 
-Write-Host "==> Removing LDAP Directory Mapping of D-RESTAPIWorkshop_Users"
+Write-Host "==> Removing LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ForegroundColor Yellow
 try {
     # We're going to get a list of all Directory Mappings, find our "RESTAPIWorkshop" mapping name, then remove it - all using pipes!
     Get-PASDirectoryMapping -DirectoryName $configFile.Settings.ActiveDirectory.Domain | Where-Object { $_.MappingName -eq "RESTAPIWorkshop" } | Remove-PASDirectoryMapping -DirectoryName "joegarcia.dev"
@@ -84,7 +84,7 @@ try {
     Write-Error "Could not remove LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ErrorAction SilentlyContinue
 }
 
-Write-Host "==> Removing CyberArk Users Security Group for Workshop"
+Write-Host "==> Removing CyberArk Users Security Group for Workshop" -ForegroundColor Yellow
 try {
     Remove-ADGroup -Identity D-RESTAPIWorkshop_Users -Confirm:$False
 } catch {
