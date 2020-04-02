@@ -12,7 +12,6 @@
         <GroupsPath>OU=Security Groups,OU=Groups,DC=joegarcia,DC=dev</GroupsPath>
     </ActiveDirectory>
     <CyberArk>
-        <ManagingCPM>PasswordManager</ManagingCPM>
         <PlatformID>WinDomain</PlatformID>
     </CyberArk>
 </Settings>

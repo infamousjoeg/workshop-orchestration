@@ -171,13 +171,10 @@ do {
     }
     # Create hash table of JSON body to send in request to Add Safe
     $bodyAddSafe = @{
-        safe = @{
-            SafeName                = $pasSafeName
-            Description             = "REST API Workshop Safe for User ${count}"
-            ManagingCPM             = $configFile.Settings.CyberArk.ManagingCPM
-            NumberOfDaysRetention   = 0
-        }
-    } | ConvertTo-Json -Depth 2 # We add Depth parameter because we have a nested JSON
+        SafeName                = $pasSafeName
+        Description             = "REST API Workshop Safe for User ${count}"
+        NumberOfDaysRetention   = 0
+    } | ConvertTo-Json
 
     try {
         # We're going to use an undocumented v2 API endpoint for Add Safe

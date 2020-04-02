@@ -28,14 +28,14 @@ CyberArk PAS REST API Workshop Orchestration
     * 3 required non-char (integer, symbol).
 * Active Directory User Membership to CyberArk Users Security Group
   * As defined in [config.ps1](config.ps1).
-* CyberArk EPVUser Licensed User Account
-  * LDAP integration with CyberArk consumes an EPVUser license and creates an LDAP-based identity within PrivateArk.
+* CyberArk LDAP Directory Mapping
+  * This is created specifically for all workshop ACL.  Adds "Add Safe" authorization on Users.
 * CyberArk Safe
-  * Safe Name: `RESTAPIWorkshop1`, etc.
+  * Safe Name: `SafeRESTAPIWorkshop1`, etc.
   * Description: `REST API Workshop Safe for User 1`, etc.
-  * Managing CPM: `PasswordManager`
-  * Number of Versions Retention: `1`
-    * This is for easier teardown of the workshop environments.
+  * Managing CPM: N/A
+  * Number of Days Retention: `0`
+    * This is for instant teardown of the workshop environments.
 * CyberArk User Account Added as CyberArk Safe Owner
   * Active Directory User added to CyberArk Safe with the following permissions:
     * `UseAccounts                             = $True`
@@ -49,8 +49,8 @@ CyberArk PAS REST API Workshop Orchestration
     * `RenameAccounts                          = $True`
     * `DeleteAccounts                          = $True`
     * `UnlockAccounts                          = $True`
-    * `ManageSafe                              = $False`
-    * `ManageSafeMembers                       = $False`
+    * `ManageSafe                              = $True`
+    * `ManageSafeMembers                       = $True`
     * `BackupSafe                              = $False`
     * `ViewAuditLog                            = $True`
     * `ViewSafeMembers                         = $True`
@@ -60,7 +60,7 @@ CyberArk PAS REST API Workshop Orchestration
     * `DeleteFolders                           = $False`
     * `MoveAccountsAndFolders                  = $False`
 * CyberArk Application Identity
-  * `RESTAPIWorkshop1`, etc.
+  * `AppRESTAPIWorkshop1`, etc.
   * Access Permitted From: `9`
   * Access Permitted To: `17`
     * Access is permitted `9am to 5pm`
@@ -87,10 +87,9 @@ CyberArk PAS REST API Workshop Orchestration
 * `UsersPath`
   * The path to the Organizational Unit (OU) or Container (CN) to create the Active Directory user object within.
   * e.g. `CN=Users,DC=joegarcia,DC=dev`
-* `CyberArkUsers`
-  * The name of the security group that is mapped to the CyberArk Users role within PrivateArk Client.  This is the security group that grants users access to login via PVWA.
-* `ManagingCPM`
-  * This would remain `PasswordManager` unless specifically changed during installation or it is necessary to target an additional CPM than the default.
+* `GroupsPath`
+  * The path to the Organizational Unit (OU) or Container (CN) to create the Active Directory group object within.
+  * e.g. `OU=Security Groups,OU=Groups,DC=joegarcia,DC=dev`
 * `PlatformID`
   * The out-of-the-box platform for `Windows Domain Accounts` is `WinDomain`.  If you copied `WinDomain` and created your own, reference that PlatformID instead.
   * Automatic management of the account will be disabled, so any `PlatformID` can be used.
@@ -105,9 +104,10 @@ See [config.xml](#configxml).
 
 * Removal of:
   * Active Directory User Object
-  * CyberArk Account Objects within Safe
-  * CyberArk EPVUser Licensed User from Safe Ownership
+  * CyberArk Safe & all account objects within
   * CyberArk Application Identity
+  * CyberArk LDAP Directory Mapping
+  * Active Directory Group Object
 
 Unfortunately, the safe will need to be removed 24 hours after [teardown.ps1](teardown.ps1) is ran due to retention policy of 1 day.
 
