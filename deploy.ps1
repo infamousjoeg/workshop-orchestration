@@ -323,13 +323,13 @@ do {
             secretType                  = "password"
             secret                      = $(ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force)
         }
-        Write-Host "==> Adding account object for " + $account.username + " to ${pasSafeName}" -ForegroundColor Yellow
+        Write-Host "==> Adding account object for" $account.username "to ${pasSafeName}" -ForegroundColor Yellow
         try {
             # Create the account object in our previously created safe
             Add-PASAccount @addAccount | Out-Null
         } catch {
             Write-Error $_
-            Write-Error "Could not create dummy user " + $account.username + " in CyberArk Safe." -ErrorAction Stop
+            Write-Error "Could not create dummy user" $account.username "in CyberArk Safe." -ErrorAction Stop
         }
     }
     
