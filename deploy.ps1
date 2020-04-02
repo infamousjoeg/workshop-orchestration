@@ -59,7 +59,7 @@ Write-Host ""
 # Logon to PAS REST API
 Write-Host "==> Creating REST API session" -ForegroundColor Yellow
 try {
-    New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential)
+    New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential -Credential "Administrator")
 } catch {
     Write-Error $_
     Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
