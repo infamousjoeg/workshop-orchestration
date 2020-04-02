@@ -99,8 +99,8 @@ $domainPath = "DC=" + $splitDomain[0] + ",DC=" + $splitDomain[1]
 Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group" -ForegroundColor Yellow
 # Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
 $newPASDirectoryMapping = @{
-    DirectoryName           = $domainPath
-    LDAPBranch              = $configFile.Settings.ActiveDirectory.GroupsPath
+    DirectoryName           = $configFile.Settings.ActiveDirectory.Domain
+    LDAPBranch              = $domainPath
     DomainGroups            = "D-RESTAPIWorkshop_Users"
     MappingName             = "RESTAPIWorkshop"
     MappingAuthorizations   = "AddSafes"
