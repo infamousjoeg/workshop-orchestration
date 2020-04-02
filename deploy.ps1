@@ -1,6 +1,8 @@
 Import-Module psPAS
 Import-Module ActiveDirectory
 
+#region Pre-Processing Tasks
+
 # Set the script path to a variable in case it is run from another path
 $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
@@ -41,15 +43,18 @@ if (!$configFile.Settings.ActiveDirectory.UsersPath) {
 if (!$configFile.Settings.ActiveDirectory.GroupsPath) {
     Write-Error "Settings.ActiveDirectory.GroupsPath must be present in config.xml."
 }
-if (!$configFile.Settings.CyberArk.ManagingCPM) {
-    Write-Error "Settings.CyberArk.ManagingCPM must be present in config.xml."
-}
 if (!$configFile.Settings.CyberArk.PlatformID) {
     Write-Error "Settings.CyberArk.PlatformID must be present in config.xml."
 }
 
+#endregion
+
+#region Deployment
+
 Write-Host "==> Starting deployment" -ForegroundColor Green
 Write-Host ""
+
+#region Logon
 
 # Logon to PAS REST API
 Write-Host "==> Creating REST API session" -ForegroundColor Yellow
@@ -60,16 +65,20 @@ try {
     Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction Stop
 }
 
+#endregion
+
+#region CyberArk Users Security Group
+
 Write-Host "==> Creating CyberArk Users Security Group for Workshop" -ForegroundColor Yellow
 # Create hash table of parameters to splat into New-ADGroup cmdlet
 $newADGroup = @{
-    Name = "D-RESTAPIWorkshop_Users"
-    SamAccountName = "D-RESTAPIWorkshop_Users"
-    GroupCategory = "Security"
-    GroupScope = "Global"
-    DisplayName = "D-RESTAPIWorkshop_Users"
-    Path = $configFile.Settings.ActiveDirectory.GroupsPath
-    Description = "CyberArk Users group for REST API Workshop"
+    Name            = "D-RESTAPIWorkshop_Users"
+    SamAccountName  = "D-RESTAPIWorkshop_Users"
+    GroupCategory   = "Security"
+    GroupScope      = "Global"
+    DisplayName     = "D-RESTAPIWorkshop_Users"
+    Path            = $configFile.Settings.ActiveDirectory.GroupsPath
+    Description     = "CyberArk Users group for REST API Workshop"
 }
 try {
     # Create Active Directory Security Group for New LDAP Mapping in PAS
@@ -79,14 +88,18 @@ try {
     Write-Error "Could not create CyberArk Users security group in Active Directory." -ErrorAction Stop
 }
 
+#endregion CyberArk Users Security Group
+
+#region LDAP Directory Mapping
+
 Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group" -ForegroundColor Yellow
 # Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
 $newPASDirectoryMapping = @{
-    DirectoryName = $configFile.Settings.ActiveDirectory.Domain
-    LDAPBranch = $configFile.Settings.ActiveDirectory.GroupsPath
-    DomainGroups = "D-RESTAPIWorkshop_Users"
-    MappingName = "RESTAPIWorkshop"
-    MappingAuthorizations = "AddSafes"
+    DirectoryName           = $configFile.Settings.ActiveDirectory.Domain
+    LDAPBranch              = $configFile.Settings.ActiveDirectory.GroupsPath
+    DomainGroups            = "D-RESTAPIWorkshop_Users"
+    MappingName             = "RESTAPIWorkshop"
+    MappingAuthorizations   = "AddSafes"
 }
 try {
     # Create new LDAP Directory Mapping in PAS for the workshop's Users security group
@@ -99,12 +112,18 @@ try {
     Write-Error "Could not create new LDAP directory mapping for D-RESTAPIWorkshop_Users." -ErrorAction Stop
 }
 
+#endregion LDAP Directory Mapping
+
+#region Attendee Loop
+
 # Set count for do...until loop to 0
 $count = 0
 
 # Begin doing the following command block until the count var...
 # ... equals the total number of attendees declared in config.xml
 do {
+    #region Variable Declaration
+
     # Increase counter by one
     $count++
     # Set loop variables
@@ -117,14 +136,18 @@ do {
     # ... to False until they are successfully completed.
     $workshopUserInfo   = New-Object PSObject
     # Attendee Details
-    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name Username -Value $adUsername
-    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name Password -Value $adPassword
-    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name Safe -Value $pasSafeName
-    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name AppID -Value $pasAppID
+    $workshopUserInfo   | Add-Member -MemberType NoteProperty -Name Username -Value $adUsername
+    $workshopUserInfo   | Add-Member -MemberType NoteProperty -Name Password -Value $adPassword
+    $workshopUserInfo   | Add-Member -MemberType NoteProperty -Name Safe -Value $pasSafeName
+    $workshopUserInfo   | Add-Member -MemberType NoteProperty -Name AppID -Value $pasAppID
     # Deployment Details
-    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name ADUser -Value "False"
-    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name CreateSafe -Value "False"
-    $workshopUserInfo | Add-Member -MemberType NoteProperty -Name CreateAppID -Value "False"
+    $workshopUserInfo   | Add-Member -MemberType NoteProperty -Name ADUser -Value "False"
+    $workshopUserInfo   | Add-Member -MemberType NoteProperty -Name CreateSafe -Value "False"
+    $workshopUserInfo   | Add-Member -MemberType NoteProperty -Name CreateAppID -Value "False"
+
+    #endregion Variable Declaration
+
+    #region Active Directory User
 
     # Create hash table of parameters to splat into New-ADUser cmdlet
     $newADUser = @{
@@ -152,6 +175,10 @@ do {
         Write-Error "Active Directory User Object could not be created." -ErrorAction Stop
     }
 
+    #endregion Active Directory User
+
+    #region AD User to CyberArk Users Group
+
     Write-Host "==> Add ${adUsername} to CyberArk Users security group" -ForegroundColor Yellow
     # Add the new AD user to the CyberArk Users security group as defined in config.xml
     try {
@@ -162,11 +189,15 @@ do {
         Write-Error "Active Directory User Object could not be added to CyberArk Users AD Security Group." -ErrorAction Stop
     }
 
+    #endregion AD User to CyberArk Users Group
+
+    #region Add Safe
+
     Write-Host "==> Adding safe: ${pasSafeName}" -ForegroundColor Yellow
     # Create hash table of parameters to splat into Invoke-RestMethod
     $addSafe = @{
-        Uri = "${configFile.Settings.API.BaseURL}/PasswordVault/api/safes"
-        Method = "Post"
+        Uri         = $configFile.Settings.API.BaseURL + "/PasswordVault/api/safes"
+        Method      = "Post"
         ContentType = "application/json"
     }
     # Create hash table of JSON body to send in request to Add Safe
@@ -188,6 +219,10 @@ do {
         Write-Error "CyberArk Safe ${pasSafeName} could not be added."
         Write-Error "Try running teardown.ps1 again to delete any orphaned safes." -ErrorAction Stop
     }
+
+    #endregion Add Safe
+
+    #region Add Safe Member
 
     # Create hash table of parameters to splat into Add-PASSafeMember cmdlet
     $addSafeMember = @{
@@ -226,6 +261,10 @@ do {
         Write-Error "Active Directory User could not be added to CyberArk Safe as Safe Owner." -ErrorAction Stop
     }
 
+    #endregion Add Safe Member
+
+    #region Add Application
+
     # Create hash table of parameters to splat into Add-PASApplication cmdlet
     $addApplication = @{
         AppID               = $pasAppID
@@ -254,6 +293,10 @@ do {
         Write-Error "Application Identity Authentication Method could not be added." -ErrorAction Stop
     }
 
+    #endregion Add Application
+
+    #region Mock Account Data Onboarding
+
     # Check that MOCK_DATA.csv exists in the script directory
     if ($(Test-Path -Path "${scriptDir}\MOCK_DATA.csv")) {
         # If it does, we import the CSV data
@@ -276,7 +319,7 @@ do {
             secretType                  = "password"
             secret                      = $(ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force)
         }
-        Write-Host "==> Adding account object for ${account} to ${pasSafeName}" -ForegroundColor Yellow
+        Write-Host "==> Adding account object for ${account.username} to ${pasSafeName}" -ForegroundColor Yellow
         try {
             # Create the account object in our previously created safe
             Add-PASAccount @addAccount | Out-Null
@@ -285,6 +328,10 @@ do {
             Write-Error "Could not create dummy user ${account.username} in CyberArk Safe." -ErrorAction Stop
         }
     }
+    
+    #endregion Mock Account Data Onboarding
+
+    #region Export Attendee Env Details to CSV
 
     # All attendee and deployment details are exported to a CSV file via append.
     # This will allow us to have a full report for after all environments are deployed.
@@ -292,13 +339,23 @@ do {
     # To be on the safe side, removing the variable should clear it out for the next loop.
     Remove-Variable workshopUserInfo
 
+    #endregion Export Attendee Env Details to CSV
+
 } until ($count -eq $configFile.Settings.AttendeeCount)
+
+#endregion Attendee Loop
+
+#region Logoff
 
 Write-Host "==> Closed REST API session" -ForegroundColor Yellow
 # Logoff the PAS REST API after completing the do...until loop.
 Close-PASSession
 
+#endregion Logoff
+
 Write-Host ""
 Write-Host "==> Deployment complete" -ForegroundColor Green
 
-Write-Host "==> Wrote Workshop Details to ${configFile.Settings.CSVExportPath}" -ForegroundColor Cyan
+#endregion Deployment
+
+Write-Host "==> Wrote Workshop Details to " + $configFile.Settings.CSVExportPath -ForegroundColor Cyan

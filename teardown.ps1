@@ -1,6 +1,8 @@
 Import-Module psPAS
 Import-Module ActiveDirectory
 
+#region Pre-Processing Tasks
+
 # Set the script path to a variable in case it is run from another path
 $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
@@ -23,8 +25,12 @@ if (!$configFile.Settings.API.AuthType -or $configFile.Settings.API.AuthType.ToL
     Write-Error "Settings.API.AuthType must match cyberark, ldap, windows, or radius in config.xml." -ErrorAction Stop
 }
 
+#endregion Pre-Processing Tasks
+
 Write-Host "==> Starting teardown" -ForegroundColor Green
 Write-Host ""
+
+#region Logon
 
 # Logon to PAS REST API
 Write-Host "==> Creating REST API session" -ForegroundColor Yellow
@@ -35,10 +41,16 @@ try {
     Write-Error "There was a problem creating an API session with CyberArk PAS." -ErrorAction SilentlyContinue
 }
 
+#endregion Logon
+
+#region Attendee Loop
+
 # Set count for do...until loop to 0
 $count = 0
 
 do {
+    #region Variable Declaration
+
     # Increase counter by one
     $count++
     # Set loop variables
@@ -46,6 +58,10 @@ do {
     $pasSafeName = "SafeRESTAPIWorkshop${count}"
     $pasAppID = "AppRESTAPIWorkshop${count}"
     
+    #endregion Variable Declaration
+
+    #region Active Directory User
+
     # Remove user object in Active Directory
     Write-Host "==> Removing Active Directory User Object ${adUsername}" -ForegroundColor Yellow
     try {
@@ -54,6 +70,10 @@ do {
         Write-Error $_
         Write-Error "Active Directory User Object ${adUsername} could not be removed." -ErrorAction SilentlyContinue
     }
+
+    #endregion Active Directory User
+
+    #region Remove Safe
 
     # Remove safe from EPV
     Write-Host "==> Removing safe ${pasSafeName}" -ForegroundColor Yellow
@@ -64,6 +84,10 @@ do {
         Write-Error "CyberArk Safe ${pasSafeName} could not be deleted." -ErrorAction SilentlyContinue
     }
 
+    #endregion Remove Safe
+
+    #region Remove Application
+
     # Remove application from EPV
     Write-Host "==> Removing $pasAppID Application ID" -ForegroundColor Yellow
     try {
@@ -73,7 +97,13 @@ do {
         Write-Error "CyberArk Application ID ${pasAppID} could not be deleted." -ErrorAction SilentlyContinue
     }
 
+    #endregion Remove Application
+
 } until ($count -eq $configFile.Settings.AttendeeCount)
+
+#endregion Attendee Loop
+
+#region Remove LDAP Directory Mapping
 
 Write-Host "==> Removing LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ForegroundColor Yellow
 try {
@@ -84,6 +114,10 @@ try {
     Write-Error "Could not remove LDAP Directory Mapping of D-RESTAPIWorkshop_Users" -ErrorAction SilentlyContinue
 }
 
+#endregion Remove LDAP Directory Mapping
+
+#region Active Directory Security Group
+
 Write-Host "==> Removing CyberArk Users Security Group for Workshop" -ForegroundColor Yellow
 try {
     Remove-ADGroup -Identity D-RESTAPIWorkshop_Users -Confirm:$False
@@ -92,9 +126,15 @@ try {
     Write-Error "Could not remove CyberArk Users security group D-RESTAPIWorkshop_Users in Active Directory." -ErrorAction SilentlyContinue
 }
 
+#endregion Active Directory Security Group
+
+#region Logoff
+
 Write-Host "==> Closed REST API session" -ForegroundColor Yellow
 # Logoff the PAS REST API
 Close-PASSession
+
+#endregion Logoff
 
 Write-Host ""
 Write-Host "==> Teardown complete" -ForegroundColor Green
