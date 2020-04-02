@@ -94,13 +94,7 @@ try {
 
 # Create Path from config.xml Domain Value
 $splitDomain = $configFile.Settings.ActiveDirectory.Domain.Split(".")
-foreach ($split in $splitDomain) {
-    if ($split -eq $splitDomain[0]) {
-        $domainPath = "DC=" + $split
-    } else {
-        $domainPath = ",DC=" + $split
-    }
-}
+$domainPath = "DC=" + $splitDomain[0] + ",DC=" + $splitDomain[1]
 
 Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group" -ForegroundColor Yellow
 # Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
