@@ -1,3 +1,5 @@
+$execStart = $(Get-Date).Second
+
 Import-Module psPAS
 Import-Module ActiveDirectory
 
@@ -363,3 +365,7 @@ Write-Host "==> Deployment complete" -ForegroundColor Green
 #endregion Deployment
 
 Write-Host "==> Wrote Workshop Details to" $configFile.Settings.CSVExportPath -ForegroundColor Cyan
+Write-Host ""
+
+$execEnd = $(Get-Date).Second
+Write-Host "==> Script Execution Time: $($execEnd - $execStart) seconds" -ForegroundColor Green

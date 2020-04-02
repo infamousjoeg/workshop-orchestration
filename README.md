@@ -10,6 +10,8 @@ CyberArk PAS REST API Workshop Orchestration
   * Valid SSL on Password Vault Web Access (PVWA)
     * _Turning off validation is not supported currently_
 * Microsoft PowerShell minimum version: 5.0
+* psPAS PowerShell Module `Install-Module psPAS`
+* [ActiveDirectory PowerShell Module](https://support.microsoft.com/en-us/help/2693643/remote-server-administration-tools-rsat-for-windows-operating-systems)
 
 ## deploy.ps1
 
