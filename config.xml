@@ -9,7 +9,6 @@
     <ActiveDirectory>
         <Domain>joegarcia.dev</Domain>
         <UsersPath>CN=Users,DC=joegarcia,DC=dev</UsersPath>
-        <GroupsPath>OU=Security Groups,OU=Groups,DC=joegarcia,DC=dev</GroupsPath>
     </ActiveDirectory>
     <CyberArk>
         <PlatformID>WinDomain</PlatformID>

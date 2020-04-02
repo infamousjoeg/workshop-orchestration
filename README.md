@@ -87,9 +87,6 @@ CyberArk PAS REST API Workshop Orchestration
 * `UsersPath`
   * The path to the Organizational Unit (OU) or Container (CN) to create the Active Directory user object within.
   * e.g. `CN=Users,DC=joegarcia,DC=dev`
-* `GroupsPath`
-  * The path to the Organizational Unit (OU) or Container (CN) to create the Active Directory group object within.
-  * e.g. `OU=Security Groups,OU=Groups,DC=joegarcia,DC=dev`
 * `PlatformID`
   * The out-of-the-box platform for `Windows Domain Accounts` is `WinDomain`.  If you copied `WinDomain` and created your own, reference that PlatformID instead.
   * Automatic management of the account will be disabled, so any `PlatformID` can be used.

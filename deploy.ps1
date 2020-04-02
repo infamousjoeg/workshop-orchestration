@@ -92,10 +92,20 @@ try {
 
 #region LDAP Directory Mapping
 
+# Create Path from config.xml Domain Value
+$splitDomain = $configFile.Settings.ActiveDirectory.Domain.Split(".")
+foreach ($split in $splitDomain) {
+    if ($split -eq $splitDomain[0]) {
+        $domainPath = "DC=" + $split
+    } else {
+        $domainPath = ",DC=" + $split
+    }
+}
+
 Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group" -ForegroundColor Yellow
 # Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
 $newPASDirectoryMapping = @{
-    DirectoryName           = $configFile.Settings.ActiveDirectory.Domain
+    DirectoryName           = $domainPath
     LDAPBranch              = $configFile.Settings.ActiveDirectory.GroupsPath
     DomainGroups            = "D-RESTAPIWorkshop_Users"
     MappingName             = "RESTAPIWorkshop"
@@ -210,7 +220,7 @@ do {
     try {
         # We're going to use an undocumented v2 API endpoint for Add Safe
         # This will allow us to set NumberOfDaysRetention to 0 for instant removal
-        Invoke-RestMethod @addSafe -Body $bodyAddSafe -Headers $(Get-PASSession).WebSession.Headers
+        Invoke-RestMethod @addSafe -Body $bodyAddSafe -Headers $(Get-PASSession).WebSession.Headers | Out-Null
         # If successfully created, flip deployment detail from False to True
         $workshopUserInfo.CreateSafe = "True"
     } catch {
