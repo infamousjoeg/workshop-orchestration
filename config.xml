@@ -4,7 +4,7 @@
     <CSVExportPath>C:\Users\jgarcia\Documents\workshopDetails.csv</CSVExportPath>
     <API>
         <BaseURL>https://cyberark.joegarcia.dev</BaseURL>
-        <AuthType>LDAP</AuthType>
+        <AuthType>CyberArk</AuthType>
     </API>
     <ActiveDirectory>
         <Domain>joegarcia.dev</Domain>
