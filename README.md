@@ -1,6 +1,8 @@
 # workshop-orchestration
 
-CyberArk PAS REST API Workshop Orchestration
+CyberArk PAS Workshop Orchestration
+
+Orchestrate 1 LDAP CyberArk User, 1 CyberArk Safe, 1 CyberArk Application ID, 50 Dummy Accounts and all the IAM around it.
 
 ## Requirements
 
@@ -10,7 +12,7 @@ CyberArk PAS REST API Workshop Orchestration
   * Valid SSL on Password Vault Web Access (PVWA)
     * _Turning off validation is not supported currently_
 * Microsoft PowerShell minimum version: 5.0
-* psPAS PowerShell Module `Install-Module psPAS`
+* psPAS PowerShell Module `Install-Module psPAS` || `Update-Module psPAS`
 * [ActiveDirectory PowerShell Module](https://support.microsoft.com/en-us/help/2693643/remote-server-administration-tools-rsat-for-windows-operating-systems)
 
 ## deploy.ps1

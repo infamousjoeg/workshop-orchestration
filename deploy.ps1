@@ -1,65 +1,28 @@
 $execStart = $(Get-Date).Second
 
-Import-Module psPAS
 Import-Module ActiveDirectory
+Import-Module cybrworkshop
+Import-Module psPAS
 
 #region Pre-Processing Tasks
 
 # Set the script path to a variable in case it is run from another path
 $scriptDir = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
-# Cleanup pre-existing exported CSV
-Remove-Item -Path $configFile.Settings.CSVExportPath -ErrorAction SilentlyContinue | Out-Null
-
-# Import XML Configuration Settings from config.xml
-try {
-    [xml]$configFile = Get-Content "${scriptDir}\config.xml"
-} catch {
-    Write-Error $_
-    Write-Error "config.xml is not present in the script directory." -ErrorAction Stop
-}
-
-# Test config.xml Values
-if ($configFile.Settings.AttendeeCount -le 0 -or !$configFile.Settings.AttendeeCount) {
-    Write-Error "Settings.AttendeeCount in config.xml must be greater than zero." -ErrorAction Stop
-}
-try {
-    New-Item -Type file $configFile.Settings.CSVExportPath | Out-Null
-} catch {
-    Write-Error $_
-    Write-Error "Settings.CSVExportPath must be a valid file path within config.xml."
-    Write-Error "If the path exists, please check NTFS permissions." -ErrorAction Stop
-}
-if (!$configFile.Settings.API.BaseURL -or $configFile.Settings.API.BaseURL -notmatch "[http|https]") {
-    Write-Error "Settings.API.BaseURL must be a valid URL beginning with https:// or http:// in config.xml." -ErrorAction Stop
-}
-if (!$configFile.Settings.API.AuthType -or $configFile.Settings.API.AuthType.ToLower() -notmatch "[cyberark|ldap|windows|radius]") {
-    Write-Error "Settings.API.AuthType must match cyberark, ldap, windows, or radius in config.xml." -ErrorAction Stop
-}
-if (!$configFile.Settings.ActiveDirectory.Domain) {
-    Write-Error "Settings.ActiveDirectory.Domain must be present in config.xml."
-}
-if (!$configFile.Settings.ActiveDirectory.UsersPath) {
-    Write-Error "Settings.ActiveDirectory.UsersPath must be present in config.xml."
-}
-if (!$configFile.Settings.ActiveDirectory.GroupsPath) {
-    Write-Error "Settings.ActiveDirectory.GroupsPath must be present in config.xml."
-}
-if (!$configFile.Settings.CyberArk.PlatformID) {
-    Write-Error "Settings.CyberArk.PlatformID must be present in config.xml."
-}
+# Import config.xml
+$configFile = Import-ConfigXML -Path $scriptDir
 
 #endregion
 
 #region Deployment
 
-Write-Host "==> Starting deployment" -ForegroundColor Green
-Write-Host ""
+Write-Color "==> Starting deployment" -Color Green
+Write-Output ""
 
 #region Logon
 
 # Logon to PAS REST API
-Write-Host "==> Creating REST API session" -ForegroundColor Yellow
+Write-Color "==> Creating REST API session"
 try {
     New-PASSession -BaseURI $configFile.Settings.API.BaseURL -Type $configFile.Settings.API.AuthType -Credential $(Get-Credential -Credential "Administrator")
 } catch {
@@ -71,7 +34,7 @@ try {
 
 #region CyberArk Users Security Group
 
-Write-Host "==> Creating CyberArk Users Security Group for Workshop" -ForegroundColor Yellow
+Write-Color "==> Creating CyberArk Users Security Group for Workshop"
 # Create hash table of parameters to splat into New-ADGroup cmdlet
 $newADGroup = @{
     Name            = "D-RESTAPIWorkshop_Users"
@@ -98,7 +61,7 @@ try {
 $splitDomain = $configFile.Settings.ActiveDirectory.Domain.Split(".")
 $domainPath = "DC=" + $splitDomain[0] + ",DC=" + $splitDomain[1]
 
-Write-Host "==> Creating New LDAP Mapping for Workshop CyberArk Users Group" -ForegroundColor Yellow
+Write-Color "==> Creating New LDAP Mapping for Workshop CyberArk Users Group"
 # Create hash table of parameters to splat into New-PASDirectoryMapping cmdlet
 $newPASDirectoryMapping = @{
     DirectoryName           = $configFile.Settings.ActiveDirectory.Domain
@@ -168,7 +131,7 @@ do {
         AccountPassword         = $(ConvertTo-SecureString $adPassword -AsPlainText -Force)
         UserPrincipalName       = "${adUsername}@${configFile.Settings.ActiveDirectory.Domain}"
     }
-    Write-Host "==> Creating Active Directory User Object: ${adUsername}" -ForegroundColor Yellow
+    Write-Color "==> Creating Active Directory User Object: ${adUsername}"
     # Create user object in Active Directory
     try {
         New-ADUser @newADUser | Out-Null
@@ -185,7 +148,7 @@ do {
 
     #region AD User to CyberArk Users Group
 
-    Write-Host "==> Add ${adUsername} to CyberArk Users security group" -ForegroundColor Yellow
+    Write-Color "==> Add ${adUsername} to CyberArk Users security group"
     # Add the new AD user to the CyberArk Users security group as defined in config.xml
     try {
         Add-ADGroupMember -Identity "D-RESTAPIWorkshop_Users" -Members $adUsername | Out-Null
@@ -199,7 +162,7 @@ do {
 
     #region Add Safe
 
-    Write-Host "==> Adding safe: ${pasSafeName}" -ForegroundColor Yellow
+    Write-Color "==> Adding safe: ${pasSafeName}"
     # Create hash table of parameters to splat into Invoke-RestMethod
     $addSafe = @{
         Uri         = $configFile.Settings.API.BaseURL + "/PasswordVault/api/safes"
@@ -257,7 +220,7 @@ do {
         DeleteFolders                           = $False
         MoveAccountsAndFolders                  = $False
     }
-    Write-Host "==> Adding ${adUsername} as Safe Owner of ${pasSafeName}" -ForegroundColor Yellow
+    Write-Color "==> Adding ${adUsername} as Safe Owner of ${pasSafeName}"
     try {
         # Add the new AD user as a member of the safe...
         # ... this is also where the EPVUser license is consumed by the new AD user.
@@ -280,7 +243,7 @@ do {
         AccessPermittedFrom = 9
         AccessPermittedTo   = 17
     }
-    Write-Host "==> Creating $pasAppID Application ID" -ForegroundColor Yellow
+    Write-Color "==> Creating $pasAppID Application ID"
     try {
         # Add a new Application ID
         Add-PASApplication @addApplication | Out-Null
@@ -290,7 +253,7 @@ do {
         Write-Error $_
         Write-Error "Application Identity could not be created." -ErrorAction Stop
     }
-    Write-Host "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}" -ForegroundColor Yellow
+    Write-Color "==> Adding Machine Address for 0.0.0.0 on ${pasAppID}"
     try {
         # Add a machineAddress IP of 0.0.0.0 to completely open the App ID up to anyone
         Add-PASApplicationAuthenticationMethod -AppID $pasAppID -machineAddress "0.0.0.0" | Out-Null
@@ -325,7 +288,7 @@ do {
             secretType                  = "password"
             secret                      = $(ConvertTo-SecureString $([System.Web.Security.Membership]::GeneratePassword(8, 3)) -AsPlainText -Force)
         }
-        Write-Host "==> Adding account object for" $account.username "to ${pasSafeName}" -ForegroundColor Yellow
+        Write-Color "==> Adding account object for" $account.username "to ${pasSafeName}"
         try {
             # Create the account object in our previously created safe
             Add-PASAccount @addAccount | Out-Null
@@ -353,19 +316,19 @@ do {
 
 #region Logoff
 
-Write-Host "==> Closed REST API session" -ForegroundColor Yellow
+Write-Color "==> Closed REST API session"
 # Logoff the PAS REST API after completing the do...until loop.
 Close-PASSession
 
 #endregion Logoff
 
-Write-Host ""
-Write-Host "==> Deployment complete" -ForegroundColor Green
+Write-Output ""
+Write-Color "==> Deployment complete" -Color Green
 
 #endregion Deployment
 
-Write-Host "==> Wrote Workshop Details to" $configFile.Settings.CSVExportPath -ForegroundColor Cyan
-Write-Host ""
+Write-Color "==> Wrote Workshop Details to" $configFile.Settings.CSVExportPath -Color Cyan
+Write-Output ""
 
 $execEnd = $(Get-Date).Second
-Write-Host "==> Script Execution Time: $($execEnd - $execStart) seconds" -ForegroundColor Green
+Write-Color "==> Script Execution Time: $($execEnd - $execStart) seconds" -Color Green
