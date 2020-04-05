@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Settings>
     <AttendeeCount>1</AttendeeCount>
-    <CSVExportPath>C:\Users\jgarcia\Documents\workshopDetails.csv</CSVExportPath>
+    <CSVExportPath>C:\Users\vagrant\Documents\workshopDetails.csv</CSVExportPath>
     <API>
         <BaseURL>https://cyberark.joegarcia.dev</BaseURL>
         <AuthType>CyberArk</AuthType>
