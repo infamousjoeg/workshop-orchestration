@@ -1,0 +1,13 @@
+name: cybrworkshop module Tests
+
+on: [push, pull_request]
+
+jobs:
+  function:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Test Import-ConfigXML
+        run: powershell .\cybrworkshop\Tests\Import-ConfigXML.ps1
+      - name: Test Write-Color
+        run: powershell .\cybrworkshop\Tests\Write-Color.ps1
