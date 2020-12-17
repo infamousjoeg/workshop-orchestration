@@ -27,7 +27,7 @@ CyberArk PAS REST API Workshop Orchestration
   * Randomized using `System.Web.Security.Membership` from [.NET Framework](https://docs.microsoft.com/en-us/dotnet/api/system.web.security.membership?view=netframework-4.8) and immediately encrypted into `SecureString` before adding to variable into memory.
   * Password complexity is minimized for easier human input during the workshop.
     * 8 characters.
-    * 3 required non-char (integer, symbol).
+    * 3 required non-char (number, symbol).
 * Active Directory User Membership to CyberArk Users Security Group
   * As defined in [config.ps1](config.ps1).
 * CyberArk LDAP Directory Mapping
